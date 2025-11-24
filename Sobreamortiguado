@@ -1,0 +1,72 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Parámetros del circuito RLC sobreamortiguado
+# Condición: R^2 > 4L/C para sobreamortiguado
+R = 100.0  # Resistencia en Ohms
+L = 0.1    # Inductancia en Henries
+C = 0.0001  # Capacitancia en Faradios (100 microFaradios)
+V0 = 10.0   # Voltaje inicial en Volts
+I0 = 0.0    # Corriente inicial en Amperes
+
+# Verificar condición de sobreamortiguado
+if R**2 <= 4*L/C:
+    print(f"ADVERTENCIA: El circuito no está sobreamortiguado.")
+    print(f"R² = {R**2:.2f}, 4L/C = {4*L/C:.2f}")
+    print("Aumentando R para garantizar sobreamortiguación...")
+    R = np.sqrt(4*L/C) * 1.5  # Asegurar sobreamortiguación
+    print(f"Nuevo R = {R:.2f} Ohms")
+
+# Calcular parámetros del circuito
+alpha = R / (2 * L)  # Factor de amortiguación
+omega0 = 1 / np.sqrt(L * C)  # Frecuencia natural
+s1 = -alpha + np.sqrt(alpha**2 - omega0**2)  # Raíz 1
+s2 = -alpha - np.sqrt(alpha**2 - omega0**2)  # Raíz 2
+
+# Calcular constantes A1 y A2 para voltaje en el capacitor
+# Condiciones iniciales: v(0) = V0, dv/dt(0) = I0/C
+A2 = (V0 * s1 - I0/C) / (s1 - s2)
+A1 = V0 - A2
+
+# Tiempo
+t = np.linspace(0, 0.1, 1000)  # 0 a 100 ms
+
+# Respuesta sobreamortiguada: v(t) = A1*e^(s1*t) + A2*e^(s2*t)
+v_t = A1 * np.exp(s1 * t) + A2 * np.exp(s2 * t)
+
+# Crear la gráfica
+plt.figure(figsize=(12, 8))
+
+# Gráfica principal
+plt.subplot(2, 1, 1)
+plt.plot(t * 1000, v_t, 'b-', linewidth=2, label='Voltaje en el capacitor')
+plt.xlabel('Tiempo (ms)', fontsize=12)
+plt.ylabel('Voltaje (V)', fontsize=12)
+plt.title('Respuesta de Circuito RLC Sobreamortiguado', fontsize=14, fontweight='bold')
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.axhline(y=0, color='k', linestyle='--', linewidth=0.5)
+
+# Gráfica en escala logarítmica (opcional, para ver mejor el decaimiento)
+plt.subplot(2, 1, 2)
+plt.semilogy(t * 1000, np.abs(v_t), 'r-', linewidth=2, label='|Voltaje| (escala log)')
+plt.xlabel('Tiempo (ms)', fontsize=12)
+plt.ylabel('|Voltaje| (V) - Escala Logarítmica', fontsize=12)
+plt.title('Respuesta en Escala Logarítmica', fontsize=12)
+plt.grid(True, alpha=0.3, which='both')
+plt.legend()
+
+plt.tight_layout()
+
+# Mostrar información del circuito
+print("\n=== Parámetros del Circuito RLC ===")
+print(f"Resistencia (R): {R:.2f} Ω")
+print(f"Inductancia (L): {L:.4f} H")
+print(f"Capacitancia (C): {C*1e6:.2f} μF")
+print(f"\nFactor de amortiguación (α): {alpha:.2f} rad/s")
+print(f"Frecuencia natural (ω₀): {omega0:.2f} rad/s")
+print(f"Raíz 1 (s₁): {s1:.2f} rad/s")
+print(f"Raíz 2 (s₂): {s2:.2f} rad/s")
+print(f"\nCondición sobreamortiguada: R² = {R**2:.2f} > 4L/C = {4*L/C:.2f} ✓")
+
+plt.show()
